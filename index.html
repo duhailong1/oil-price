@@ -2,88 +2,68 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>今日油价查询</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>全国今日油价可视化大屏</title>
   <style>
-    :root { color-scheme: light; --ink:#19263a; --muted:#758196; --red:#e02e34; --gold:#f3b43f; --line:#e7e9ee; }
-    * { box-sizing: border-box; }
-    body { margin:0; min-height:100vh; font-family:"Microsoft YaHei",system-ui,sans-serif; color:var(--ink); background:#f4f6f9; }
-    header { padding:18px 6vw; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
-    .brand { display:flex; align-items:center; gap:12px; font-weight:800; font-size:20px; }
-    .drop { width:34px; height:42px; border-radius:55% 55% 60% 60%; background:linear-gradient(145deg,#ef4147,#b90d18); transform:rotate(45deg); position:relative; }
-    .drop::after { content:""; position:absolute; width:11px; height:17px; border-radius:50%; background:rgba(255,255,255,.35); top:7px; left:7px; }
-    .api-btn { border:1px solid var(--line); background:#fff; border-radius:10px; padding:9px 13px; cursor:pointer; color:#4b586d; }
-    main { width:min(1060px,90vw); margin:42px auto; }
-    .hero { background:linear-gradient(135deg,#242f42 0%,#101722 100%); color:#fff; padding:38px; border-radius:22px; box-shadow:0 20px 45px rgba(27,36,52,.14); position:relative; overflow:hidden; }
-    .hero::after { content:""; position:absolute; width:290px; height:290px; border:60px solid rgba(243,180,63,.13); border-radius:50%; right:-110px; top:-170px; }
-    h1 { margin:0 0 10px; font-size:clamp(28px,5vw,45px); }
-    .sub { color:#bac2cf; margin:0; }
-    .controls { display:grid; grid-template-columns:1fr auto; gap:12px; margin-top:30px; max-width:590px; position:relative; z-index:1; }
-    select, input { width:100%; border:0; border-radius:12px; padding:14px 16px; font-size:16px; outline:none; }
-    .query { border:0; border-radius:12px; padding:0 24px; background:var(--gold); color:#251b08; font-size:16px; font-weight:800; cursor:pointer; }
-    .query:disabled { opacity:.55; cursor:wait; }
-    .meta { display:flex; justify-content:space-between; gap:15px; margin:25px 2px 14px; color:var(--muted); font-size:14px; }
-    .prices { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-    .card { min-height:180px; background:#fff; border:1px solid var(--line); border-radius:18px; padding:23px; box-shadow:0 8px 24px rgba(28,38,55,.055); }
-    .label { color:var(--muted); font-weight:700; }
-    .number { font-size:35px; font-weight:900; margin-top:30px; letter-spacing:-1px; }
-    .unit { font-size:14px; color:var(--muted); margin-left:5px; font-weight:500; }
-    .card:nth-child(2) .number { color:var(--red); }
-    .notice { margin-top:20px; padding:15px 18px; border-radius:12px; background:#fff8e8; color:#78602e; line-height:1.65; }
-    a { color:#c9272d; }
-    @media(max-width:760px){ .prices{grid-template-columns:repeat(2,1fr)} .hero{padding:27px} }
-    @media(max-width:460px){ .prices{grid-template-columns:1fr} .controls{grid-template-columns:1fr} .query{padding:14px} .meta{display:block} }
+    :root{--bg:#07101f;--panel:#0d1a2d;--panel2:#10223b;--line:#1d3856;--cyan:#32d7ff;--blue:#3486ff;--gold:#ffbd43;--red:#ff5263;--green:#3fe0a0;--text:#edf7ff;--muted:#7f9ab4}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#123256 0,#07101f 42%,#050b15 100%);color:var(--text);font-family:"Microsoft YaHei",system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(52,134,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(52,134,255,.035) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 82%)}
+    .screen{width:min(1600px,100%);min-height:100vh;margin:auto;padding:18px 24px 24px;position:relative}
+    header{height:76px;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;position:relative}
+    header:after{content:"";position:absolute;left:0;right:0;top:60px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan)}
+    .brand{color:var(--muted);font-size:13px;letter-spacing:2px;padding-top:17px}.brand b{color:var(--cyan)}
+    h1{font-size:28px;letter-spacing:5px;margin:7px 0 0;text-align:center;text-shadow:0 0 18px rgba(50,215,255,.45)}
+    .clock{text-align:right;padding-top:7px}.clock-time{font:700 24px/1.2 Consolas,monospace;color:var(--cyan)}.clock-date{font-size:12px;color:var(--muted);margin-top:4px}
+    .grid{display:grid;grid-template-columns:280px minmax(500px,1fr) 310px;gap:16px}
+    .panel{background:linear-gradient(145deg,rgba(16,34,59,.94),rgba(8,21,38,.94));border:1px solid var(--line);border-radius:6px;box-shadow:inset 0 1px rgba(255,255,255,.035),0 16px 38px rgba(0,0,0,.2);position:relative;overflow:hidden}
+    .panel:before,.panel:after{content:"";position:absolute;width:18px;height:18px;border-color:var(--cyan);opacity:.65}.panel:before{left:-1px;top:-1px;border-left:2px solid;border-top:2px solid}.panel:after{right:-1px;bottom:-1px;border-right:2px solid;border-bottom:2px solid}
+    .panel-title{height:43px;padding:12px 15px;border-bottom:1px solid rgba(52,134,255,.18);font-size:14px;font-weight:700;letter-spacing:1px}.panel-title:before{content:"";display:inline-block;width:3px;height:14px;background:var(--cyan);vertical-align:-2px;margin-right:9px;box-shadow:0 0 8px var(--cyan)}
+    .side{display:flex;flex-direction:column;gap:16px}.location{padding:18px 16px}.location label{display:block;font-size:12px;color:var(--muted);margin-bottom:9px}select{width:100%;background:#08172a;color:#fff;border:1px solid #28557d;border-radius:4px;padding:12px;font-size:15px;outline:none}select:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(50,215,255,.12)}
+    .query{width:100%;margin-top:12px;border:0;border-radius:4px;padding:12px;background:linear-gradient(90deg,#187eea,#27c7ec);color:#fff;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 20px rgba(39,199,236,.2)}.query:disabled{opacity:.55;cursor:wait}
+    .status-box{padding:18px 16px;flex:1}.status-line{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:18px}.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}.status-line.loading .dot{background:var(--gold);box-shadow:0 0 10px var(--gold)}.status-line.error .dot{background:var(--red);box-shadow:0 0 10px var(--red)}
+    .detail{border-left:1px dashed #2b4b68;padding-left:13px;margin-left:4px}.detail small{display:block;color:var(--muted);margin:15px 0 5px}.detail strong{font-size:14px;font-weight:600}.source{font-size:11px;color:#58738d;line-height:1.7;padding-top:16px}
+    .center{display:grid;grid-template-rows:auto 1fr;gap:16px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.price-card{padding:19px 16px 17px;min-height:141px}.fuel{display:flex;align-items:center;justify-content:space-between;color:#bcd0e2;font-weight:700}.tag{font-size:10px;padding:3px 6px;border:1px solid currentColor;border-radius:3px;color:var(--cyan)}.value{font:800 36px/1.2 DIN Alternate,"Arial Narrow",sans-serif;margin-top:22px;color:#fff}.value span{font:400 11px Microsoft YaHei;color:var(--muted);margin-left:4px}.price-card:nth-child(2) .value{color:var(--gold)}.price-card:nth-child(3) .value{color:var(--red)}.price-card:nth-child(4) .value{color:var(--green)}
+    .chart-panel{min-height:440px}.chart-wrap{padding:18px 24px 26px;height:calc(100% - 43px);display:flex;flex-direction:column}.chart-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:16px}.chart{flex:1;display:grid;grid-template-columns:42px 1fr;min-height:310px}.axis{display:flex;flex-direction:column;justify-content:space-between;text-align:right;padding:0 10px 31px 0;color:#58738d;font:11px Consolas}.plot{position:relative;display:flex;align-items:flex-end;justify-content:space-around;border-left:1px solid #27435e;border-bottom:1px solid #27435e;background:repeating-linear-gradient(to top,rgba(53,109,158,.15) 0 1px,transparent 1px 20%)}
+    .bar-group{width:18%;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;padding-bottom:0}.bar{width:min(68px,66%);height:0;border-radius:4px 4px 0 0;background:linear-gradient(to top,#1267d7,var(--cyan));box-shadow:0 0 20px rgba(50,215,255,.2);transition:height .8s cubic-bezier(.2,.8,.2,1);position:relative}.bar.gold{background:linear-gradient(to top,#b77608,var(--gold))}.bar.red{background:linear-gradient(to top,#b8203b,var(--red))}.bar.green{background:linear-gradient(to top,#0b9060,var(--green))}.bar-value{position:absolute;top:-27px;left:50%;transform:translateX(-50%);font:700 13px Consolas;color:#fff}.bar-label{position:absolute;bottom:-28px;white-space:nowrap;color:#9eb4c8;font-size:12px}
+    .trend{padding:20px}.trend-main{text-align:center;padding:12px 0 18px}.trend-arrow{font-size:42px;color:var(--cyan);filter:drop-shadow(0 0 8px currentColor)}.trend-direction{font-size:24px;font-weight:800;margin:4px}.trend-date{color:var(--muted);font-size:12px}.trend-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.trend-grid div{padding:15px 8px;text-align:center}.trend-grid div+div{border-left:1px solid var(--line)}.trend-grid small{display:block;color:var(--muted);font-size:10px;margin-bottom:7px}.trend-grid strong{font:700 17px Consolas;color:var(--gold)}
+    .tips{padding:18px 16px;flex:1}.tips p{margin:0;color:#9ab0c3;font-size:12px;line-height:1.9}.pulse{height:42px;margin-top:20px;display:flex;align-items:center;gap:3px}.pulse i{display:block;width:3px;background:var(--cyan);animation:pulse 1.2s ease-in-out infinite}.pulse i:nth-child(2){animation-delay:.1s}.pulse i:nth-child(3){animation-delay:.2s}.pulse i:nth-child(4){animation-delay:.3s}.pulse i:nth-child(5){animation-delay:.4s}@keyframes pulse{0%,100%{height:5px;opacity:.35}50%{height:32px;opacity:1}}
+    footer{text-align:center;color:#46627b;font-size:11px;padding-top:14px;letter-spacing:1px}
+    @media(max-width:1050px){.grid{grid-template-columns:240px 1fr}.right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.cards{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:720px){.screen{padding:12px}.grid{grid-template-columns:1fr}.right{grid-column:auto;display:flex}.cards{grid-template-columns:repeat(2,1fr)}header{grid-template-columns:1fr}.brand,.clock{display:none}h1{font-size:20px}.chart-panel{min-height:390px}.value{font-size:30px}}
   </style>
 </head>
 <body>
-  <header><div class="brand"><span class="drop"></span><span>今日油价</span></div><button class="api-btn" id="refresh">刷新数据</button></header>
-  <main>
-    <section class="hero">
-      <h1>全国油价，一选即查</h1>
-      <p class="sub">选择省份，查看 92、95、98 号汽油及 0 号柴油参考价</p>
-      <div class="controls"><select id="province" aria-label="选择省份"></select><button class="query" id="query">查询油价</button></div>
+<div class="screen">
+  <header><div class="brand"><b>ENERGY</b> · DATA CENTER</div><h1>全国今日油价可视化大屏</h1><div class="clock"><div class="clock-time" id="clock">00:00:00</div><div class="clock-date" id="date">—</div></div></header>
+  <main class="grid">
+    <aside class="side">
+      <section class="panel"><div class="panel-title">地区筛选</div><div class="location"><label>选择查询省份</label><select id="province" aria-label="选择查询省份"></select><button class="query" id="query">立即查询</button></div></section>
+      <section class="panel"><div class="panel-title">数据状态</div><div class="status-box"><div class="status-line loading" id="status"><span class="dot"></span><span id="statusText">正在连接数据</span></div><div class="detail"><small>当前地区</small><strong id="currentRegion">—</strong><small>数据更新时间</small><strong id="updated">—</strong><small>查询时间</small><strong id="queryTime">—</strong></div><div class="source">地区参考价格会因不同站点、会员活动等因素产生差异。</div></div></section>
+    </aside>
+    <section class="center">
+      <div class="cards">
+        <article class="panel price-card"><div class="fuel">92号汽油<span class="tag">92#</span></div><div class="value" data-price="92">—<span>元/升</span></div></article>
+        <article class="panel price-card"><div class="fuel">95号汽油<span class="tag">95#</span></div><div class="value" data-price="95">—<span>元/升</span></div></article>
+        <article class="panel price-card"><div class="fuel">98号汽油<span class="tag">98#</span></div><div class="value" data-price="98">—<span>元/升</span></div></article>
+        <article class="panel price-card"><div class="fuel">0号柴油<span class="tag">0#</span></div><div class="value" data-price="0">—<span>元/升</span></div></article>
+      </div>
+      <section class="panel chart-panel"><div class="panel-title">各标号油价对比</div><div class="chart-wrap"><div class="chart-meta"><span id="chartRegion">地区：—</span><span>单位：元 / 升</span></div><div class="chart"><div class="axis"><span>12</span><span>9</span><span>6</span><span>3</span><span>0</span></div><div class="plot"><div class="bar-group"><div class="bar" data-bar="92"><b class="bar-value">—</b></div><span class="bar-label">92号汽油</span></div><div class="bar-group"><div class="bar gold" data-bar="95"><b class="bar-value">—</b></div><span class="bar-label">95号汽油</span></div><div class="bar-group"><div class="bar red" data-bar="98"><b class="bar-value">—</b></div><span class="bar-label">98号汽油</span></div><div class="bar-group"><div class="bar green" data-bar="0"><b class="bar-value">—</b></div><span class="bar-label">0号柴油</span></div></div></div></div></section>
     </section>
-    <div class="meta"><span id="area">尚未查询</span><span id="updated">—</span></div>
-    <section class="prices">
-      <article class="card"><div class="label">92 号汽油</div><div class="number" data-price="p92">—<span class="unit">元/升</span></div></article>
-      <article class="card"><div class="label">95 号汽油</div><div class="number" data-price="p95">—<span class="unit">元/升</span></div></article>
-      <article class="card"><div class="label">98 号汽油</div><div class="number" data-price="p98">—<span class="unit">元/升</span></div></article>
-      <article class="card"><div class="label">0 号柴油</div><div class="number" data-price="p0">—<span class="unit">元/升</span></div></article>
-    </section>
-    <div class="notice" id="notice">正在获取今日油价。价格为地区参考价，各加油站实际售价可能略有差异。</div>
+    <aside class="side right">
+      <section class="panel"><div class="panel-title">下次调价预测</div><div class="trend"><div class="trend-main"><div class="trend-arrow" id="trendArrow">↔</div><div class="trend-direction" id="trendDirection">等待数据</div><div class="trend-date" id="trendDate">—</div></div><div class="trend-grid"><div><small>预计变化</small><strong id="changeTon">—</strong></div><div><small>每升幅度</small><strong id="changeLiter">—</strong></div></div></div></section>
+      <section class="panel"><div class="panel-title">行情提示</div><div class="tips"><p id="description">系统正在获取最新油价及调价趋势，请稍候。</p><div class="pulse"><i></i><i></i><i></i><i></i><i></i></div></div></section>
+    </aside>
   </main>
-  <script>
-    const provinces = ['北京','上海','天津','重庆','河北','山西','内蒙古','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆'];
-    const select = document.querySelector('#province');
-    provinces.forEach(name => select.add(new Option(name, name)));
-    select.value = localStorage.getItem('oilProvince') || '广东';
-    const notice = document.querySelector('#notice');
-    const queryBtn = document.querySelector('#query');
-    document.querySelector('#refresh').onclick = loadPrice;
-    queryBtn.onclick = loadPrice;
-    select.onchange = () => { localStorage.setItem('oilProvince', select.value); loadPrice(); };
-    function setPrice(field, value) {
-      document.querySelector(`[data-price="${field}"]`).innerHTML = `${value ?? '—'}<span class="unit">元/升</span>`;
-    }
-    async function loadPrice() {
-      queryBtn.disabled = true; queryBtn.textContent = '查询中…'; notice.textContent = '正在获取最新地区油价…';
-      try {
-        const url = `https://60s.viki.moe/v2/fuel-price?region=${encodeURIComponent(select.value)}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`网络错误 ${response.status}`);
-        const json = await response.json();
-        if (json.code !== 200) throw new Error(json.message || '接口返回异常');
-        const d = json.data || {};
-        const prices = Object.fromEntries((d.items || []).map(item => [item.name, item.price]));
-        setPrice('p92', prices['92#汽油']); setPrice('p95', prices['95#汽油']); setPrice('p98', prices['98#汽油']); setPrice('p0', prices['0#柴油']);
-        document.querySelector('#area').textContent = `${d.region || select.value} 今日参考油价`;
-        document.querySelector('#updated').textContent = `数据更新：${d.updated || new Date().toLocaleString('zh-CN',{hour12:false})}`;
-        notice.textContent = `${d.trend?.description || '油价数据已更新。'} 数据来自开源 60s API，仅供参考；中石化各站点挂牌价、会员优惠可能不同。`;
-      } catch (err) {
-        notice.textContent = `查询失败：${err.message}。请稍后点击“刷新数据”重试。`;
-      } finally { queryBtn.disabled = false; queryBtn.textContent = '查询油价'; }
-    }
-    loadPrice();
-  </script>
+  <footer>全国成品油价格监测 · 数据仅供参考</footer>
+</div>
+<script>
+  const provinces=['北京','上海','天津','重庆','河北','山西','内蒙古','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆'];
+  const select=document.querySelector('#province');provinces.forEach(x=>select.add(new Option(x,x)));select.value=localStorage.getItem('oilProvince')||'广东';
+  const pad=n=>String(n).padStart(2,'0');function tick(){const d=new Date();document.querySelector('#clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;document.querySelector('#date').textContent=d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'})}tick();setInterval(tick,1000);
+  const setStatus=(type,text)=>{const el=document.querySelector('#status');el.className=`status-line ${type}`;document.querySelector('#statusText').textContent=text};
+  function renderPrice(key,value){document.querySelector(`[data-price="${key}"]`).innerHTML=`${value??'—'}<span>元/升</span>`;const bar=document.querySelector(`[data-bar="${key}"]`);bar.style.height=value?`${Math.min(value/12*100,100)}%`:'0';bar.querySelector('.bar-value').textContent=value??'—'}
+  async function loadPrice(){const button=document.querySelector('#query');button.disabled=true;button.textContent='查询中…';setStatus('loading','正在连接数据');try{const res=await fetch(`https://60s.viki.moe/v2/fuel-price?region=${encodeURIComponent(select.value)}`);if(!res.ok)throw new Error(`网络错误 ${res.status}`);const json=await res.json();if(json.code!==200)throw new Error(json.message||'接口异常');const d=json.data||{},map=Object.fromEntries((d.items||[]).map(x=>[x.name,x.price]));renderPrice('92',map['92#汽油']);renderPrice('95',map['95#汽油']);renderPrice('98',map['98#汽油']);renderPrice('0',map['0#柴油']);document.querySelector('#currentRegion').textContent=d.region||select.value;document.querySelector('#chartRegion').textContent=`地区：${d.region||select.value}`;document.querySelector('#updated').textContent=d.updated||'—';document.querySelector('#queryTime').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});const t=d.trend||{};document.querySelector('#trendDirection').textContent=t.direction||'暂无预测';document.querySelector('#trendDate').textContent=t.next_adjustment_date?`预计 ${t.next_adjustment_date} 调整`:'—';document.querySelector('#changeTon').textContent=t.change_ton_desc||'—';document.querySelector('#changeLiter').textContent=t.change_liter_desc||'—';document.querySelector('#description').textContent=t.description||'油价数据已更新。';const down=(t.direction||'').includes('下'),up=(t.direction||'').includes('上'),arrow=document.querySelector('#trendArrow');arrow.textContent=down?'↓':up?'↑':'↔';arrow.style.color=down?'var(--green)':up?'var(--red)':'var(--cyan)';setStatus('','数据连接正常')}catch(e){setStatus('error','数据获取失败');document.querySelector('#description').textContent=`${e.message}，请稍后重试。`}finally{button.disabled=false;button.textContent='立即查询'}}
+  select.onchange=()=>{localStorage.setItem('oilProvince',select.value);loadPrice()};document.querySelector('#query').onclick=loadPrice;loadPrice();
+</script>
 </body>
 </html>
