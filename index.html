@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>今日油价查询</title>
+  <style>
+    :root { color-scheme: light; --ink:#19263a; --muted:#758196; --red:#e02e34; --gold:#f3b43f; --line:#e7e9ee; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; font-family:"Microsoft YaHei",system-ui,sans-serif; color:var(--ink); background:#f4f6f9; }
+    header { padding:18px 6vw; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:800; font-size:20px; }
+    .drop { width:34px; height:42px; border-radius:55% 55% 60% 60%; background:linear-gradient(145deg,#ef4147,#b90d18); transform:rotate(45deg); position:relative; }
+    .drop::after { content:""; position:absolute; width:11px; height:17px; border-radius:50%; background:rgba(255,255,255,.35); top:7px; left:7px; }
+    .api-btn { border:1px solid var(--line); background:#fff; border-radius:10px; padding:9px 13px; cursor:pointer; color:#4b586d; }
+    main { width:min(1060px,90vw); margin:42px auto; }
+    .hero { background:linear-gradient(135deg,#242f42 0%,#101722 100%); color:#fff; padding:38px; border-radius:22px; box-shadow:0 20px 45px rgba(27,36,52,.14); position:relative; overflow:hidden; }
+    .hero::after { content:""; position:absolute; width:290px; height:290px; border:60px solid rgba(243,180,63,.13); border-radius:50%; right:-110px; top:-170px; }
+    h1 { margin:0 0 10px; font-size:clamp(28px,5vw,45px); }
+    .sub { color:#bac2cf; margin:0; }
+    .controls { display:grid; grid-template-columns:1fr auto; gap:12px; margin-top:30px; max-width:590px; position:relative; z-index:1; }
+    select, input { width:100%; border:0; border-radius:12px; padding:14px 16px; font-size:16px; outline:none; }
+    .query { border:0; border-radius:12px; padding:0 24px; background:var(--gold); color:#251b08; font-size:16px; font-weight:800; cursor:pointer; }
+    .query:disabled { opacity:.55; cursor:wait; }
+    .meta { display:flex; justify-content:space-between; gap:15px; margin:25px 2px 14px; color:var(--muted); font-size:14px; }
+    .prices { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    .card { min-height:180px; background:#fff; border:1px solid var(--line); border-radius:18px; padding:23px; box-shadow:0 8px 24px rgba(28,38,55,.055); }
+    .label { color:var(--muted); font-weight:700; }
+    .number { font-size:35px; font-weight:900; margin-top:30px; letter-spacing:-1px; }
+    .unit { font-size:14px; color:var(--muted); margin-left:5px; font-weight:500; }
+    .card:nth-child(2) .number { color:var(--red); }
+    .notice { margin-top:20px; padding:15px 18px; border-radius:12px; background:#fff8e8; color:#78602e; line-height:1.65; }
+    a { color:#c9272d; }
+    @media(max-width:760px){ .prices{grid-template-columns:repeat(2,1fr)} .hero{padding:27px} }
+    @media(max-width:460px){ .prices{grid-template-columns:1fr} .controls{grid-template-columns:1fr} .query{padding:14px} .meta{display:block} }
+  </style>
+</head>
+<body>
+  <header><div class="brand"><span class="drop"></span><span>今日油价</span></div><button class="api-btn" id="refresh">刷新数据</button></header>
+  <main>
+    <section class="hero">
+      <h1>全国油价，一选即查</h1>
+      <p class="sub">选择省份，查看 92、95、98 号汽油及 0 号柴油参考价</p>
+      <div class="controls"><select id="province" aria-label="选择省份"></select><button class="query" id="query">查询油价</button></div>
+    </section>
+    <div class="meta"><span id="area">尚未查询</span><span id="updated">—</span></div>
+    <section class="prices">
+      <article class="card"><div class="label">92 号汽油</div><div class="number" data-price="p92">—<span class="unit">元/升</span></div></article>
+      <article class="card"><div class="label">95 号汽油</div><div class="number" data-price="p95">—<span class="unit">元/升</span></div></article>
+      <article class="card"><div class="label">98 号汽油</div><div class="number" data-price="p98">—<span class="unit">元/升</span></div></article>
+      <article class="card"><div class="label">0 号柴油</div><div class="number" data-price="p0">—<span class="unit">元/升</span></div></article>
+    </section>
+    <div class="notice" id="notice">正在获取今日油价。价格为地区参考价，各加油站实际售价可能略有差异。</div>
+  </main>
+  <script>
+    const provinces = ['北京','上海','天津','重庆','河北','山西','内蒙古','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆'];
+    const select = document.querySelector('#province');
+    provinces.forEach(name => select.add(new Option(name, name)));
+    select.value = localStorage.getItem('oilProvince') || '广东';
+    const notice = document.querySelector('#notice');
+    const queryBtn = document.querySelector('#query');
+    document.querySelector('#refresh').onclick = loadPrice;
+    queryBtn.onclick = loadPrice;
+    select.onchange = () => { localStorage.setItem('oilProvince', select.value); loadPrice(); };
+    function setPrice(field, value) {
+      document.querySelector(`[data-price="${field}"]`).innerHTML = `${value ?? '—'}<span class="unit">元/升</span>`;
+    }
+    async function loadPrice() {
+      queryBtn.disabled = true; queryBtn.textContent = '查询中…'; notice.textContent = '正在获取最新地区油价…';
+      try {
+        const url = `https://60s.viki.moe/v2/fuel-price?region=${encodeURIComponent(select.value)}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`网络错误 ${response.status}`);
+        const json = await response.json();
+        if (json.code !== 200) throw new Error(json.message || '接口返回异常');
+        const d = json.data || {};
+        const prices = Object.fromEntries((d.items || []).map(item => [item.name, item.price]));
+        setPrice('p92', prices['92#汽油']); setPrice('p95', prices['95#汽油']); setPrice('p98', prices['98#汽油']); setPrice('p0', prices['0#柴油']);
+        document.querySelector('#area').textContent = `${d.region || select.value} 今日参考油价`;
+        document.querySelector('#updated').textContent = `数据更新：${d.updated || new Date().toLocaleString('zh-CN',{hour12:false})}`;
+        notice.textContent = `${d.trend?.description || '油价数据已更新。'} 数据来自开源 60s API，仅供参考；中石化各站点挂牌价、会员优惠可能不同。`;
+      } catch (err) {
+        notice.textContent = `查询失败：${err.message}。请稍后点击“刷新数据”重试。`;
+      } finally { queryBtn.disabled = false; queryBtn.textContent = '查询油价'; }
+    }
+    loadPrice();
+  </script>
+</body>
+</html>
