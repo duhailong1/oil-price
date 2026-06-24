@@ -58,7 +58,7 @@
 </div>
 <script>
   const provinces=['北京','上海','天津','重庆','河北','山西','内蒙古','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆'];
-  const select=document.querySelector('#province');provinces.forEach(x=>select.add(new Option(x,x)));select.value=localStorage.getItem('oilProvince')||'广东';
+  const select=document.querySelector('#province');provinces.forEach(x=>select.add(new Option(x,x)));select.value=localStorage.getItem('oilProvince')||'河北';
   const pad=n=>String(n).padStart(2,'0');function tick(){const d=new Date();document.querySelector('#clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;document.querySelector('#date').textContent=d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'})}tick();setInterval(tick,1000);
   const setStatus=(type,text)=>{const el=document.querySelector('#status');el.className=`status-line ${type}`;document.querySelector('#statusText').textContent=text};
   function renderPrice(key,value){document.querySelector(`[data-price="${key}"]`).innerHTML=`${value??'—'}<span>元/升</span>`;const bar=document.querySelector(`[data-bar="${key}"]`);bar.style.height=value?`${Math.min(value/12*100,100)}%`:'0';bar.querySelector('.bar-value').textContent=value??'—'}
